@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>平面机构自由度计算器</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>平面机构自由度计算器</h1>
+    <p class="subtitle">F = 3n − 2P<sub>L</sub> − P<sub>H</sub> − F′，自动处理复合铰链、局部自由度和虚约束</p>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="structured">结构化录入</button>
+      <button class="tab" role="tab" data-tab="numeric">数值计算</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 结构化录入 -->
+    <section id="tab-structured" class="tab-panel active">
+      <div class="toolbar">
+        <label class="field-inline">例题
+          <select id="example-select">
+            <option value="">选择例题载入…</option>
+          </select>
+        </label>
+        <span class="toolbar-spacer"></span>
+        <button id="btn-export" class="btn">导出 JSON</button>
+        <button id="btn-import" class="btn">导入 JSON</button>
+        <input id="file-import" type="file" accept=".json,application/json" hidden>
+        <button id="btn-clear" class="btn btn-danger">清空</button>
+      </div>
+      <p id="example-desc" class="example-desc" hidden></p>
+
+      <div class="layout">
+        <div class="col-edit">
+          <div class="card">
+            <div class="card-head">
+              <h2>构件</h2>
+              <button id="btn-add-link" class="btn btn-primary">＋ 添加构件</button>
+            </div>
+            <p class="card-tip">机架只有一个，不计入 n。被焊接或键连接成一体的零件算一个构件。滚子这类自转不影响其他构件的，局部自由度填 1。</p>
+            <div class="table-wrap">
+              <table class="edit-table">
+                <thead>
+                  <tr><th>编号</th><th>名称</th><th>局部自由度</th><th>虚约束构件</th><th></th></tr>
+                </thead>
+                <tbody id="links-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>运动副</h2>
+              <button id="btn-add-joint" class="btn btn-primary">＋ 添加运动副</button>
+            </div>
+            <p class="card-tip">转动副可勾选多个构件，表示它们在同一轴线铰接，程序按 k−1 计复合铰链。移动副和高副只连接 2 个构件。</p>
+            <div class="table-wrap">
+              <table class="edit-table">
+                <thead>
+                  <tr><th>名称</th><th>类型</th><th>连接构件</th><th>虚约束</th><th></th></tr>
+                </thead>
+                <tbody id="joints-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-result">
+          <div class="card result-card">
+            <div class="card-head">
+              <h2>计算结果</h2>
+              <label class="field-inline">原动件数
+                <input id="drivers" type="number" min="0" step="1" placeholder="可选">
+              </label>
+            </div>
+            <div id="result"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h2>拓扑图</h2></div>
+            <div id="graph" class="graph"></div>
+            <div class="legend">
+              <span><i class="lg lg-R"></i>转动副</span>
+              <span><i class="lg lg-P"></i>移动副</span>
+              <span><i class="lg lg-H"></i>高副</span>
+              <span><i class="lg lg-X"></i>不计入</span>
+              <span><i class="lg-node"></i>复合铰链</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>逐项明细</h2></div>
+        <div class="table-wrap">
+          <table class="detail-table">
+            <thead>
+              <tr><th>运动副</th><th>类型</th><th>连接构件</th><th>低副</th><th>高副</th><th>说明</th></tr>
+            </thead>
+            <tbody id="details-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 数值计算 -->
+    <section id="tab-numeric" class="tab-panel">
+      <div class="layout">
+        <div class="col-edit">
+          <div class="card">
+            <div class="card-head">
+              <h2>输入</h2>
+              <button id="btn-from-structured" class="btn">从结构化结果带入</button>
+            </div>
+            <p class="card-tip">p′ 是虚约束带来的重复约束数，按约束个数计（一个多余低副计 2，一个多余高副计 1）。若已在 n 和 P<sub>L</sub> 中去掉虚约束，p′ 填 0。</p>
+            <form id="numeric-form" class="num-form" autocomplete="off">
+              <label><span>活动构件数 n</span><input name="n" type="number" min="0" step="1" value="3"></label>
+              <label><span>低副数 P<sub>L</sub></span><input name="PL" type="number" min="0" step="1" value="4"></label>
+              <label><span>高副数 P<sub>H</sub></span><input name="PH" type="number" min="0" step="1" value="0"></label>
+              <label><span>局部自由度 F′</span><input name="localDof" type="number" min="0" step="1" value="0"></label>
+              <label><span>虚约束数 p′</span><input name="virtual" type="number" min="0" step="1" value="0"></label>
+              <label><span>原动件数（可选）</span><input name="drivers" type="number" min="0" step="1" placeholder="可选"></label>
+            </form>
+          </div>
+        </div>
+        <div class="col-result">
+          <div class="card result-card">
+            <div class="card-head"><h2>计算结果</h2></div>
+            <div id="numeric-result"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    计算结果对应一般位置；数据只保存在本机浏览器。
+  </footer>
+
+  <script src="js/dof.js"></script>
+  <script src="js/examples.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
