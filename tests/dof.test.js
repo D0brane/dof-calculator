@@ -27,6 +27,19 @@ test('平行四边形不标虚约束时 F = 0 并给出提示', () => {
   assert.ok(r.hints.some((h) => h.includes('虚约束')));
 });
 
+test('双导路滚子凸轮：不标虚约束时 F = -1 并警告导路重复，不计局部自由度时 F = 2', () => {
+  const model = clone(EXAMPLES.find((e) => e.id === 'rollerCamTwoGuides').model);
+  model.joints.forEach((j) => { j.redundant = false; });
+  const r = DOF.analyze(model);
+  assert.strictEqual(r.PL, 4);
+  assert.strictEqual(r.F, -1);
+  assert.ok(r.warnings.some((w) => w.includes('移动副')));
+
+  const noLocal = clone(EXAMPLES.find((e) => e.id === 'rollerCamTwoGuides').model);
+  noLocal.links.forEach((l) => { l.localDof = 0; });
+  assert.strictEqual(DOF.analyze(noLocal).F, 2);
+});
+
 test('复合铰链按 k-1 计，并在明细中标出', () => {
   const r = DOF.analyze(EXAMPLES.find((e) => e.id === 'compoundSixBar').model);
   const c = r.details.find((d) => d.id === 'J3');

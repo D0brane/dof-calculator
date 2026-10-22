@@ -107,6 +107,22 @@ var DOF_EXAMPLES = (function () {
       }
     },
     {
+      id: 'rollerCamTwoGuides',
+      title: '直动滚子从动件凸轮（双导路）',
+      description: '从动件由上下两处导路支承，两处导路共线，其中一处是虚约束；滚子自转是局部自由度。取消导路 2 的虚约束标记会算出 F = −1。',
+      expected: { n: 3, PL: 3, PH: 1, localDof: 1, F: 1 },
+      model: {
+        links: [ground(), L('L1', '凸轮'), L('L2', '推杆'), L('L3', '滚子', { localDof: 1 })],
+        joints: [
+          J('J1', '凸轮轴 O', 'R', ['L0', 'L1']),
+          J('J2', '导路 1', 'P', ['L2', 'L0']),
+          J('J3', '导路 2', 'P', ['L2', 'L0'], { redundant: true }),
+          J('J4', '滚子销 B', 'R', ['L3', 'L2']),
+          J('J5', '凸轮–滚子接触', 'H', ['L1', 'L3'], { hType: 'cam' })
+        ]
+      }
+    },
+    {
       id: 'parallelogram',
       title: '含虚约束的平行四边形机构',
       description: 'EF 与 AB、CD 平行且等长，是虚约束。取消 EF 的虚约束标记后会算出 F = 0。',
